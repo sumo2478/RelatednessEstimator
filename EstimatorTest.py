@@ -1,10 +1,25 @@
 import unittest
 from Estimator import Estimator
 
+import Constants
+
 class TestRelatednessEstimation(unittest.TestCase):
 	def test_determine_relatedness(self):
-		x = Estimator("file")
-		self.assertEqual(x.printFileName(), "file")
+		x = Estimator("data/simplified_data.phased", "data/relationship_mapping", 'CEU')
+		self.assertEqual(x.printFileName(), "data/simplified_data.phased")
+
+	def test_reading_relationship_mapping_files(self):
+		estimator = Estimator("data/simplified_data.phased", "data/relationship_mapping", 'CEU')
+		relationshipMapping = estimator.relationshipMapping
+		self.assertEqual(relationshipMapping[0, Constants.RELATIONSHIP_REGION_INDEX], 'CEU')
+		self.assertEqual(relationshipMapping[0, 0], '1328')
+		self.assertEqual(relationshipMapping[4, 3], 'NA12749')
+
+	def test_construct_parent_genotype_mapping(self):
+		estimator = Estimator("data/simplified_data.phased", "data/relationship_mapping", 'CEU')
+		genotypeMapping = estimator.genotypeMapping
+		self.assertTrue('NA12144' in genotypeMapping)
+		self.assertEqual(genotypeMapping['NA12749']['transmitted'][0], 1)
 
 if __name__ == '__main__':
 	unittest.main()
