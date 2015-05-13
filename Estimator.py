@@ -42,12 +42,16 @@ class Estimator():
 		
 		return mapping
 
-	def determineRelatedness(self, sequence1, sequence2):
+	def determineRelatedness(self, sequence1, sequence2):		
 		return np.corrcoef(sequence1, sequence2)
 
 	def constructParentGenotypeMapping(self, fileName):
 		"Creates a mapping of parent Id to genotype A (transmitted) and B (untransmitted)"
 		data = self.readFileIntoMatrix(fileName, 'str')
+
+		nonTrivialIndices = self.indicesOfNonTrivialAlleles(data, 0.9)
+		
+		data = data[nonTrivialIndices, :]
 
 		genotypeMapping = {}
 
@@ -120,3 +124,32 @@ class Estimator():
 	def readFileIntoMatrix(self, fileName, type):
 		data = np.genfromtxt(fileName, dtype=type)		
 		return data
+
+	def indicesOfNonTrivialAlleles(self, genotypeData, percentRelated):
+		"""
+		Removes the trivial alleles from the data set
+		Determines the proportion of alleles and if one is either greater than
+		or less than 1-percentRelated then it is removed from the dataset
+		"""		
+		indicesToReturn = [0]
+		totalLength = len(genotypeData[0])
+		for index, allele in enumerate(genotypeData[1:, 2:]):
+			totalSum = 0
+
+			for entry in allele:
+				totalSum = totalSum + Constants.ALLELE_TO_INDEX_MAP[entry]
+
+			ratio = totalSum / float(totalLength)
+			if ratio < percentRelated and ratio > (1 - percentRelated):
+				indicesToReturn.append(index + 1)
+
+		return indicesToReturn
+			
+
+
+
+
+
+
+
+
