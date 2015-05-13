@@ -18,18 +18,28 @@ class Estimator():
 		self.region = region
 		self.relationshipMapping = self.parseRelationshipMapping(relationshipFileName, region)		
 		self.genotypeMapping = self.constructParentGenotypeMapping(dataFileName)
+		self.genotypes = self.constructGenotypes(self.relationshipMapping, self.genotypeMapping)
 	
 	def parseRelationshipMapping(self, fileName, region):
 		data = self.readFileIntoMatrix(fileName, 'str')
 
 		# Find rows that correspond to the specified region
 		regionMask = data[:, Constants.RELATIONSHIP_REGION_INDEX] == region
-
+		
 		# Determine the indices for the valid entries in the mask
 		validEntryIndices = [i for i, x in enumerate(regionMask) if x == True]
 
 		mapping = data[validEntryIndices, :]
 
+		# Remove entries that don't have two parents
+		parent1Mask = mapping[:, Constants.RELATIONSHIP_PARENT1_ID_INDEX] != '0'
+		parent2Mask = mapping[:, Constants.RELATIONSHIP_PARENT2_ID_INDEX] != '0'
+		
+		validParentEntryIndices = [i for i, parent1 in enumerate(parent1Mask) if parent1 and parent2Mask[i]]
+
+		mapping = mapping[validParentEntryIndices, Constants.RELATIONSHIP_PARENT1_ID_INDEX:Constants.RELATIONSHIP_PARENT2_ID_INDEX+1]		
+		mapping = [{'parent1': row[0], 'parent2': row[1]} for row in mapping]	
+		
 		return mapping
 
 	def determineRelatedness(self, sequence1, sequence2):
@@ -66,6 +76,42 @@ class Estimator():
 			genotypeMapping[personId] = person	
 
 		return genotypeMapping	
+
+	def constructGenotypes(self, relationshipMapping, genotypeMapping):
+		"""
+		Creates a genotyped data
+		- Structure of the output:
+		{
+			parent1: [0 1 0 0 1 ...]
+			parent2: [1 0 1 1 0 ...]
+			child: [1 1 0 0 1 ...]
+		}
+		"""
+		genotypes = []
+
+		# For each relationship in the relationship mapping
+		for relationship in relationshipMapping:
+			try:
+				# Concatenate the transmitted genotypes for parent 1 and parent 2 to 
+				# get the genotypes of the children
+				parent1 = genotypeMapping[relationship['parent1']]
+				parent2 = genotypeMapping[relationship['parent2']]
+
+				childGenotype = parent1['transmitted'] + parent2['transmitted']
+				parent1Genotype = parent1['transmitted'] + parent1['untransmitted']
+				parent2Genotype = parent2['transmitted'] + parent2['untransmitted']							
+
+				genotypeEntry = {
+					'child': childGenotype,
+					'parent1': parent1Genotype,
+					'parent2': parent2Genotype
+				}
+
+				genotypes.append(genotypeEntry)				
+			except KeyError:
+				continue
+		
+		return genotypes
 
 	# Helper Functions
 	def printFileName(self):
