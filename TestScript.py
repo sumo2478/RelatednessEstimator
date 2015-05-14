@@ -23,26 +23,29 @@ def main():
 		configureEstimator(estimator)
 
 	while True:
-		print("\nPlease select an option: ")
-		print("1: Print relationships")
-		print('2: Determine correlation between two people')		
-		print('3: Determine relatedness of two people')
-		print('4: Configure estimator')
-		print('5: Exit')
-		input = raw_input()
-		
-		if (input == '1'):
-			printRelationshipOption(estimator)
-		elif (input == '2'):
-			determineCorrelationOption(estimator)			
-		elif(input == '3'):
-			determineRelatendessOption(estimator)
-		elif (input == '4'):
-			configureEstimator(estimator)
-		elif (input == '5'):
-			return
-		else:
-			print('Invalid input')
+		try:			
+			print("\nPlease select an option: ")
+			print("1: Print relationships")
+			print('2: Determine correlation between two people')		
+			print('3: Determine relatedness of two people')
+			print('4: Configure estimator')
+			print('5: Exit')
+			input = raw_input()
+			
+			if (input == '1'):
+				printRelationshipOption(estimator)
+			elif (input == '2'):
+				determineCorrelationOption(estimator)			
+			elif(input == '3'):
+				determineRelatendessOption(estimator)
+			elif (input == '4'):
+				configureEstimator(estimator)
+			elif (input == '5'):
+				return
+			else:
+				print('Invalid input')
+		except Exception, e:
+			print('Error: ' + str(e))
 
 def printRelationshipOption(estimator):
 	try:
@@ -76,16 +79,6 @@ def configureEstimator(estimator):
 	alleleRelevancyThreshold = float(raw_input('Maximum percent similarity in alleles: '))
 
 	estimator.configure(region, alleleRelevancyThreshold)
-	# try:
-	# 	region = raw_input('Region to examine: ')
-	# 	alleleRelevancyThreshold = raw_input('Maximum percent similarity in alleles: ')
-
-	# 	estimator.configure(region, alleleRelevancyThreshold)
-	# except Exception, e:
-	# 	print(str(e))
-	# finally:
-	# 	return estimator	
-
 
 if __name__ == '__main__':
 	main()

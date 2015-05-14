@@ -15,7 +15,11 @@ class Estimator():
 		@param {string} region - The three character region identifier i.e. CEU
 		"""		
 		self.dataFileName = dataFileName
-		self.relationshipFileName = relationshipFileName		
+		self.relationshipFileName = relationshipFileName
+		self.region = None
+		self.relationshipMapping = None
+		self.genotypeMapping = None
+		self.genotypes = None		
 
 	def configure(self, region, alleleRelvancyThreshold):
 		print('Configuring...')
@@ -155,11 +159,18 @@ class Estimator():
 		Prints the relationships between child, parent1, and parent2
 		@param {int} amount - Number of results to display
 		"""
-		print("===============================================")
+		print("=================================================================")
 		print("Relationships::")
-		print("===============================================")
+		print("=================================================================")
 		for relationship in self.relationshipMapping[:amount]:
 			print('Child: ' + relationship['child'] + '		Parent1: ' + relationship['parent1'] + ' 	Parent2: ' + relationship['parent2'])
+
+	def areRelated(self, person1, person2):
+		corr = self.determineRelatedness(person1, person2)
+		if corr[0, 1] > 0.1:
+			return True
+		else:
+			return False
 
 	# Helper Functions	
 	def printFileName(self):
