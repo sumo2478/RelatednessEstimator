@@ -1,10 +1,10 @@
 from Estimator import Estimator
 
 def main():
-	# e = Estimator('data/ceu_chromosome1.phased', 'data/relationship_mapping')	
-	# e.configure('CEU', 0.6)
-	e = Estimator('data/yri_chromosome1.phased', 'data/relationship_mapping')
-	e.configure('YRI', 0.6)
+	e = Estimator('data/large.phased', 'data/relationship_mapping')	
+	e.configure('CEU', 0.6)
+	# e = Estimator('data/yri_chromosome1.phased', 'data/relationship_mapping')
+	# e.configure('YRI', 0.6)
 
 	relationshipMapping = e.relationshipMapping
 
@@ -54,8 +54,10 @@ def main():
 			(addedResults, addedTotal) = compareWithOtherRelationFalse(parent2, other, e)
 			correctResults = correctResults + addedResults
 			totalResults = totalResults + addedTotal
-			
-	print('Accuracy: ' + str(correctResults / float(totalResults)))						
+	
+	print('\n====================================================')	
+	print('Accuracy: ' + str(correctResults / float(totalResults)))	
+	print('====================================================')						
 
 def compareWithOtherRelationFalse(person, other, e):
 	correctResults = 0
