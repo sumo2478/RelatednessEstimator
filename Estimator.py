@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as stat
 from copy import copy, deepcopy
+import itertools
 
 import Constants
 from Person import Person
@@ -20,12 +21,14 @@ class Estimator():
 		self.relationshipMapping = None
 		self.genotypeMapping = None
 		self.genotypes = None		
+		self.numSNPs = None
 
-	def configure(self, region, alleleRelvancyThreshold):
+	def configure(self, region, alleleRelvancyThreshold, numSNPs=None):
 		print('Configuring...')
 		self.region = region		
+		self.numSNPs = numSNPs
 		self.relationshipMapping = self.parseRelationshipMapping(self.relationshipFileName, self.region)		
-		self.genotypeMapping = self.constructParentGenotypeMapping(self.dataFileName, alleleRelvancyThreshold)
+		self.genotypeMapping = self.constructParentGenotypeMapping(self.dataFileName, alleleRelvancyThreshold, numSNPs)
 		self.genotypes = self.constructGenotypes(self.relationshipMapping, self.genotypeMapping)		
 	
 	def parseRelationshipMapping(self, fileName, region):
@@ -48,7 +51,7 @@ class Estimator():
 		validParentEntryIndices = [i for i, parent1 in enumerate(parent1Mask) if parent1 and parent2Mask[i]]
 
 		mapping = mapping[validParentEntryIndices, Constants.RELATIONSHIP_CHILD_ID_INDEX:Constants.RELATIONSHIP_PARENT2_ID_INDEX+1]		
-		mapping = [{'parent1': row[1], 'parent2': row[2], 'child':row[0]} for row in mapping]	
+		mapping = [{'parent1': row[1], 'parent2': row[2], 'child':row[0], 'child2':row[0] + '_2'} for row in mapping]	
 		
 		return mapping
 
@@ -66,7 +69,7 @@ class Estimator():
 		
 		return average
 
-	def constructParentGenotypeMapping(self, fileName, alleleRelvancyThreshold):
+	def constructParentGenotypeMapping(self, fileName, alleleRelvancyThreshold, numSNPs=None):
 		"""
 		Creates a mapping of parent Id to genotype A (transmitted) and B (untransmitted)
 		- Structure of output:
@@ -76,9 +79,9 @@ class Estimator():
 		}
 		"""
 
-		print("Constructing parent genotype map...")
+		print("Constructing parent genotype map...")		
 
-		data = self.readFileIntoMatrix(fileName, 'str')
+		data = self.readFileIntoMatrix(fileName, 'str', numSNPs)					
 
 		nonTrivialIndices = self.indicesOfNonTrivialAlleles(data, alleleRelvancyThreshold)
 		
@@ -140,30 +143,58 @@ class Estimator():
 
 				childChromosome1 = parent1['transmitted']
 				childChromosome2 = parent2['transmitted']
-				childPerson = Person(childId, childChromosome1, childChromosome2, parent1, parent2)				
+				childPerson = Person(childId, childChromosome1, childChromosome2, parent1, parent2)								
 
 				parent1Person = Person(parent1Id, parent1['transmitted'], parent1['untransmitted'])				
 
 				parent2Person = Person(parent2Id, parent2['transmitted'], parent2['untransmitted'])				
 
+				childPerson2 = self.createChild(parent1Person, parent2Person, childId + '_2')
+
 				genotypes[childPerson.personId] = childPerson
 				genotypes[parent1Person.personId] = parent1Person
 				genotypes[parent2Person.personId] = parent2Person
+				genotypes[childPerson2.personId] = childPerson2
 			except KeyError:
 				continue
 		
 		return genotypes
+
+	def createChild(self, parent1, parent2, childId):
+		sizeOfGenome = len(parent1.chr1)
+		randomSelectionParent1 = np.random.random_integers(0, 1, sizeOfGenome)
+		randomSelectionParent2 = np.random.random_integers(0, 1, sizeOfGenome)
+
+		chr1 = []
+		chr2 = []
+
+		for i in range(sizeOfGenome):
+			selectionParent1 = randomSelectionParent1[i]
+			if selectionParent1 == 0:
+				chr1.append(parent1.chr1[i])
+			else:
+				chr1.append(parent1.chr2[i])
+
+			selectionParent2 = randomSelectionParent2[i]
+			if selectionParent2 == 0:
+				chr2.append(parent2.chr1[i])
+			else:
+				chr2.append(parent2.chr2[i])
+
+		return Person(childId, chr1, chr2, parent1, parent2)
+
+
 
 	def printRelationships(self, amount):
 		"""
 		Prints the relationships between child, parent1, and parent2
 		@param {int} amount - Number of results to display
 		"""
-		print("=================================================================")
+		print("====================================================================================")
 		print("Relationships::")
-		print("=================================================================")
+		print("====================================================================================")
 		for relationship in self.relationshipMapping[:amount]:
-			print('Child: ' + relationship['child'] + '		Parent1: ' + relationship['parent1'] + ' 	Parent2: ' + relationship['parent2'])
+			print('Child: ' + relationship['child'] + '		Child2: ' + relationship['child2'] + '		Parent1: ' + relationship['parent1'] + ' 	Parent2: ' + relationship['parent2'])
 
 	def areRelated(self, person1, person2):
 		corr = self.determineRelatedness(person1, person2)
@@ -176,8 +207,14 @@ class Estimator():
 	def printFileName(self):
 		return self.dataFileName
 
-	def readFileIntoMatrix(self, fileName, type):
-		data = np.genfromtxt(fileName, dtype=type)		
+	def readFileIntoMatrix(self, fileName, type, numToSkip=None):
+		data = None
+		if numToSkip:			
+			t_in = open(fileName)	     		
+			data = np.genfromtxt(itertools.islice(t_in, numToSkip), dtype=type)
+		else:
+			data = np.genfromtxt(fileName, dtype=type)		
+
 		return data
 
 	def indicesOfNonTrivialAlleles(self, genotypeData, percentRelated):

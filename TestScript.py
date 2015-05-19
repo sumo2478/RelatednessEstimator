@@ -69,7 +69,7 @@ def determineRelatendessOption(estimator):
 	person1 = raw_input('Id of the first person: ')
 	person2 = raw_input('Id of the second person: ')
 	corr = estimator.determineRelatedness(person1, person2)
-	if corr[0, 1] > 0.05:
+	if corr[0, 1] > 0.1:
 		print('\nRelated')
 	else:
 		print('\nNo relation found')
