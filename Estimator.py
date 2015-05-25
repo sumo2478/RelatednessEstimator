@@ -86,6 +86,7 @@ class Estimator():
 		nonTrivialIndices = self.indicesOfNonTrivialAlleles(data, alleleRelvancyThreshold)
 		
 		data = data[nonTrivialIndices, :]
+		print("Number of SNPS used: " + str(len(data)))
 
 		genotypeMapping = {}
 
