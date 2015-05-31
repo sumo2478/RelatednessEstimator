@@ -199,7 +199,7 @@ class Estimator():
 
 	def areRelated(self, person1, person2):
 		corr = self.determineRelatedness(person1, person2)
-		if corr[0, 1] > 0.1:
+		if corr[0, 1] > 0.15:
 			return True
 		else:
 			return False
