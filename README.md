@@ -18,9 +18,9 @@ Script that provides a simple interface to use to determine relatedness
 * Maximum percent similarity? MAF to use as threshold
 
 Options:
-1. Print relationships - Prints the relationship mappings and ID's of people
-2. Determine correlation  - Determines correlation between two people given their ID's
-3. Determine relatedness of two people - Says whether or not the two people are related
+1.  Print relationships - Prints the relationship mappings and ID's of people
+2.  Determine correlation  - Determines correlation between two people given their ID's
+3.  Determine relatedness of two people - Says whether or not the two people are related
 
 ## Sibling Simulator
 Simulator that runs multiple tests given parameters and outputs the accuracies given those parameters
