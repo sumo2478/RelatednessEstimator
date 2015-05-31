@@ -24,3 +24,6 @@ Options:
 
 ## Sibling Simulator
 Simulator that runs multiple tests given parameters and outputs the accuracies given those parameters
+
+## Data
+Contains the phased genotype data files and the relationship mapping files
